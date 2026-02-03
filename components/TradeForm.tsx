@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, type FormEvent } from 'react';
+import { useState, useEffect, type FormEvent } from 'react';
 import {
+  type Trade,
   type TradeFormData,
   type Direction,
   type ExecutionGrade,
@@ -36,10 +37,33 @@ const EMPTY_FORM: TradeFormData = {
 
 /* ── props ───────────────────────────────────────────────────────────── */
 
+function tradeToForm(trade: Trade): TradeFormData {
+  return {
+    market: trade.market,
+    direction: trade.direction,
+    setup_type: trade.setup_type,
+    entry_price: trade.entry_price != null ? String(trade.entry_price) : '',
+    exit_price: trade.exit_price != null ? String(trade.exit_price) : '',
+    stop_loss: trade.stop_loss != null ? String(trade.stop_loss) : '',
+    take_profit: trade.take_profit != null ? String(trade.take_profit) : '',
+    position_size: trade.position_size != null ? String(trade.position_size) : '',
+    entry_time: trade.entry_time ? trade.entry_time.slice(0, 16) : '',
+    exit_time: trade.exit_time ? trade.exit_time.slice(0, 16) : '',
+    execution_grade: (trade.execution_grade as ExecutionGrade) || '',
+    outcome: (trade.outcome as Outcome) || '',
+    pnl: trade.pnl != null ? String(trade.pnl) : '',
+    r_multiple: trade.r_multiple != null ? String(trade.r_multiple) : '',
+    notes: trade.notes || '',
+    tags: trade.tags?.join(', ') || '',
+  };
+}
+
 interface TradeFormProps {
   onSubmit: (form: TradeFormData) => Promise<string | null>;
   onRuleCheck?: (tradeId: string) => void;
   defaultMarket?: string;
+  editTrade?: Trade | null;
+  onCancelEdit?: () => void;
 }
 
 /* ── component ───────────────────────────────────────────────────────── */
@@ -48,12 +72,22 @@ export default function TradeForm({
   onSubmit,
   onRuleCheck,
   defaultMarket = 'GC',
+  editTrade,
+  onCancelEdit,
 }: TradeFormProps) {
-  const [form, setForm] = useState<TradeFormData>({
-    ...EMPTY_FORM,
-    market: defaultMarket,
-  });
+  const isEditing = !!editTrade;
+  const [form, setForm] = useState<TradeFormData>(
+    editTrade ? tradeToForm(editTrade) : { ...EMPTY_FORM, market: defaultMarket }
+  );
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (editTrade) {
+      setForm(tradeToForm(editTrade));
+    } else {
+      setForm({ ...EMPTY_FORM, market: defaultMarket });
+    }
+  }, [editTrade, defaultMarket]);
 
   /* field helpers */
   const set = <K extends keyof TradeFormData>(key: K, value: TradeFormData[K]) =>
@@ -67,8 +101,12 @@ export default function TradeForm({
     try {
       const tradeId = await onSubmit(form);
       if (tradeId) {
+        if (isEditing) {
+          onCancelEdit?.();
+        } else {
+          onRuleCheck?.(tradeId);
+        }
         setForm({ ...EMPTY_FORM, market: defaultMarket });
-        onRuleCheck?.(tradeId);
       }
     } finally {
       setLoading(false);
@@ -83,7 +121,20 @@ export default function TradeForm({
       className="bg-card border border-border rounded-2xl p-6 space-y-6"
     >
       {/* ---- Header ---- */}
-      <h2 className="text-lg font-semibold text-accent">Log Trade</h2>
+      <div className="flex items-center justify-between">
+        <h2 className="text-lg font-semibold text-accent">
+          {isEditing ? 'Edit Trade' : 'Log Trade'}
+        </h2>
+        {isEditing && onCancelEdit && (
+          <button
+            type="button"
+            onClick={onCancelEdit}
+            className="text-sm text-muted hover:text-foreground transition-colors"
+          >
+            Cancel
+          </button>
+        )}
+      </div>
 
       {/* ---- Market ---- */}
       <fieldset>
@@ -392,7 +443,7 @@ export default function TradeForm({
             Saving...
           </span>
         ) : (
-          'Log Trade'
+          isEditing ? 'Update Trade' : 'Log Trade'
         )}
       </button>
     </form>

@@ -94,6 +94,37 @@ export async function loadTrades(
   return data || [];
 }
 
+export async function updateTrade(
+  supabase: SupabaseClient,
+  tradeId: string,
+  form: TradeFormData
+): Promise<Trade | null> {
+  const { data } = await supabase
+    .from('trades')
+    .update({
+      market: form.market,
+      direction: form.direction,
+      setup_type: form.setup_type,
+      entry_price: form.entry_price ? parseFloat(form.entry_price) : null,
+      exit_price: form.exit_price ? parseFloat(form.exit_price) : null,
+      stop_loss: form.stop_loss ? parseFloat(form.stop_loss) : null,
+      take_profit: form.take_profit ? parseFloat(form.take_profit) : null,
+      position_size: form.position_size ? parseFloat(form.position_size) : null,
+      entry_time: form.entry_time || null,
+      exit_time: form.exit_time || null,
+      execution_grade: form.execution_grade || null,
+      outcome: form.outcome || null,
+      pnl: form.pnl ? parseFloat(form.pnl) : null,
+      r_multiple: form.r_multiple ? parseFloat(form.r_multiple) : null,
+      notes: form.notes || null,
+      tags: form.tags ? form.tags.split(',').map((t) => t.trim()).filter(Boolean) : null,
+    })
+    .eq('id', tradeId)
+    .select()
+    .single();
+  return data;
+}
+
 export async function deleteTrade(supabase: SupabaseClient, tradeId: string): Promise<boolean> {
   const { error } = await supabase.from('trades').delete().eq('id', tradeId);
   return !error;

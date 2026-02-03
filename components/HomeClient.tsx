@@ -19,6 +19,7 @@ import {
   loadProfile,
   upsertProfile,
   createTrade,
+  updateTrade,
   loadTrades,
   saveRuleCheck,
   saveReflection,
@@ -72,6 +73,7 @@ export default function HomeClient({ userId, userEmail }: Props) {
   const [sessionPlan, setSessionPlan] = useState<SessionPlan | null>(null);
   const [ruleCheckTradeId, setRuleCheckTradeId] = useState<string | null>(null);
   const [lastTradeId, setLastTradeId] = useState<string | null>(null);
+  const [editingTrade, setEditingTrade] = useState<Trade | null>(null);
   const [loading, setLoading] = useState(true);
 
   // ── Load data on mount ─────────────────────────────────────────────
@@ -115,6 +117,25 @@ export default function HomeClient({ userId, userEmail }: Props) {
       return trade.id;
     }
     return null;
+  };
+
+  const handleUpdateTrade = async (form: TradeFormData): Promise<string | null> => {
+    if (!editingTrade) return null;
+    const updated = await updateTrade(supabase, editingTrade.id, form);
+    if (updated) {
+      setTrades((prev) => prev.map((t) => (t.id === updated.id ? updated : t)));
+      return updated.id;
+    }
+    return null;
+  };
+
+  const handleTradeClick = (trade: Trade) => {
+    setEditingTrade(trade);
+    setActiveTab('log');
+  };
+
+  const handleCancelEdit = () => {
+    setEditingTrade(null);
   };
 
   const handleRuleCheck = (tradeId: string) => {
@@ -226,15 +247,18 @@ export default function HomeClient({ userId, userEmail }: Props) {
         {activeTab === 'log' && (
           <div className="space-y-6">
             <TradeForm
-              onSubmit={handleLogTrade}
-              onRuleCheck={handleRuleCheck}
+              key={editingTrade?.id || 'new'}
+              onSubmit={editingTrade ? handleUpdateTrade : handleLogTrade}
+              onRuleCheck={editingTrade ? undefined : handleRuleCheck}
               defaultMarket={profile?.default_market || 'GC'}
+              editTrade={editingTrade}
+              onCancelEdit={handleCancelEdit}
             />
-            {lastTradeId && (
+            {(lastTradeId || editingTrade) && (
               <div className="space-y-3">
                 <h3 className="text-sm font-medium text-muted">Attach Screenshots</h3>
                 <ScreenshotUpload
-                  tradeId={lastTradeId}
+                  tradeId={editingTrade?.id || lastTradeId!}
                   userId={userId}
                   supabase={supabase}
                 />
@@ -244,7 +268,7 @@ export default function HomeClient({ userId, userEmail }: Props) {
         )}
 
         {activeTab === 'history' && (
-          <TradeLog trades={trades} />
+          <TradeLog trades={trades} onTradeClick={handleTradeClick} />
         )}
 
         {activeTab === 'reflect' && (

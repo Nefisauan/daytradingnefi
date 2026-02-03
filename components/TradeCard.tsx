@@ -84,6 +84,10 @@ export default function TradeCard({ trade, onClick }: Props) {
       {trade.notes && (
         <p className="mt-2 text-xs text-muted line-clamp-2">{trade.notes}</p>
       )}
+
+      {onClick && (
+        <div className="mt-2 text-[10px] text-muted/50 text-right">Tap to edit</div>
+      )}
     </button>
   );
 }
