@@ -1,15 +1,16 @@
 'use client';
 
 import { useState } from 'react';
-import { Trade, SETUP_TYPES } from '@/lib/types';
+import { Trade, Reflection, SETUP_TYPES } from '@/lib/types';
 import TradeCard from './TradeCard';
 
 interface Props {
   trades: Trade[];
+  reflections?: Reflection[];
   onTradeClick?: (trade: Trade) => void;
 }
 
-export default function TradeLog({ trades, onTradeClick }: Props) {
+export default function TradeLog({ trades, reflections = [], onTradeClick }: Props) {
   const [setupFilter, setSetupFilter] = useState('');
   const [outcomeFilter, setOutcomeFilter] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
@@ -79,7 +80,12 @@ export default function TradeLog({ trades, onTradeClick }: Props) {
       ) : (
         <div className="space-y-2">
           {filtered.map((trade) => (
-            <TradeCard key={trade.id} trade={trade} onClick={onTradeClick} />
+            <TradeCard
+              key={trade.id}
+              trade={trade}
+              reflection={reflections.find((r) => r.trade_id === trade.id)}
+              onClick={onTradeClick}
+            />
           ))}
         </div>
       )}

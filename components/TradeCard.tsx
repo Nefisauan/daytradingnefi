@@ -1,10 +1,19 @@
 'use client';
 
-import { Trade } from '@/lib/types';
+import { Trade, Reflection, EmotionLevel } from '@/lib/types';
 import { format } from 'date-fns';
+
+const EMOTION_EMOJIS: Record<EmotionLevel, string> = {
+  calm: '\u{1F600}',
+  focused: '\u{1F3AF}',
+  anxious: '\u{1F630}',
+  frustrated: '\u{1F621}',
+  tilted: '\u{1F525}',
+};
 
 interface Props {
   trade: Trade;
+  reflection?: Reflection;
   onClick?: (trade: Trade) => void;
 }
 
@@ -15,7 +24,7 @@ const GRADE_COLORS: Record<string, string> = {
   F: 'text-red bg-red/10',
 };
 
-export default function TradeCard({ trade, onClick }: Props) {
+export default function TradeCard({ trade, reflection, onClick }: Props) {
   const isWin = trade.outcome === 'win';
   const isLoss = trade.outcome === 'loss';
   const pnlColor = isWin ? 'text-green' : isLoss ? 'text-red' : 'text-muted';
@@ -83,6 +92,21 @@ export default function TradeCard({ trade, onClick }: Props) {
 
       {trade.notes && (
         <p className="mt-2 text-xs text-muted line-clamp-2">{trade.notes}</p>
+      )}
+
+      {reflection && (
+        <div className="mt-2 flex items-center gap-1.5 text-xs text-muted">
+          <span className="text-[10px] bg-accent/10 text-accent px-1.5 py-0.5 rounded">Reflected</span>
+          {reflection.pre_emotion && (
+            <span title={`Pre: ${reflection.pre_emotion}`}>{EMOTION_EMOJIS[reflection.pre_emotion]}</span>
+          )}
+          {reflection.during_emotion && (
+            <span title={`During: ${reflection.during_emotion}`}>{EMOTION_EMOJIS[reflection.during_emotion]}</span>
+          )}
+          {reflection.post_emotion && (
+            <span title={`Post: ${reflection.post_emotion}`}>{EMOTION_EMOJIS[reflection.post_emotion]}</span>
+          )}
+        </div>
       )}
 
       {onClick && (

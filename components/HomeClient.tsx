@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/client';
 import {
   Trade,
   Profile,
+  Reflection,
   TabId,
   TradeFormData,
   RuleCheckFormData,
@@ -30,6 +31,7 @@ import {
   savePlaybookEntry,
   loadStreaks,
   updateStreak,
+  loadReflections,
 } from '@/lib/supabase/database';
 import AuthButton from './AuthButton';
 import StreakTracker from './StreakTracker';
@@ -45,6 +47,7 @@ import EconomicCalendar from './EconomicCalendar';
 import PlaybookView from './PlaybookView';
 import AIInsights from './AIInsights';
 import ScreenshotUpload from './ScreenshotUpload';
+import TradeCalendar from './TradeCalendar';
 
 const TABS: { id: TabId; label: string }[] = [
   { id: 'log', label: 'Log Trade' },
@@ -52,6 +55,7 @@ const TABS: { id: TabId; label: string }[] = [
   { id: 'reflect', label: 'Reflect' },
   { id: 'dashboard', label: 'Dashboard' },
   { id: 'plan', label: 'Plan' },
+  { id: 'trade-calendar', label: 'Trade Cal' },
   { id: 'calendar', label: 'Calendar' },
   { id: 'playbook', label: 'Playbook' },
 ];
@@ -73,24 +77,27 @@ export default function HomeClient({ userId, userEmail }: Props) {
   const [sessionPlan, setSessionPlan] = useState<SessionPlan | null>(null);
   const [ruleCheckTradeId, setRuleCheckTradeId] = useState<string | null>(null);
   const [lastTradeId, setLastTradeId] = useState<string | null>(null);
+  const [reflections, setReflections] = useState<Reflection[]>([]);
   const [editingTrade, setEditingTrade] = useState<Trade | null>(null);
   const [loading, setLoading] = useState(true);
 
   // ── Load data on mount ─────────────────────────────────────────────
   const loadAllData = useCallback(async () => {
     setLoading(true);
-    const [profileData, tradesData, playbookData, streaksData, planData] = await Promise.all([
+    const [profileData, tradesData, playbookData, streaksData, planData, reflectionsData] = await Promise.all([
       loadProfile(supabase, userId),
       loadTrades(supabase, userId, { limit: 200 }),
       loadPlaybook(supabase, userId),
       loadStreaks(supabase, userId),
       loadSessionPlan(supabase, userId),
+      loadReflections(supabase, userId, { limit: 500 }),
     ]);
     setProfile(profileData);
     setTrades(tradesData);
     setPlaybookEntries(playbookData);
     setStreaks(streaksData);
     setSessionPlan(planData);
+    setReflections(reflectionsData);
     setLoading(false);
   }, [supabase, userId]);
 
@@ -149,8 +156,12 @@ export default function HomeClient({ userId, userEmail }: Props) {
   const handleReflection = async (form: ReflectionFormData) => {
     await saveReflection(supabase, userId, form);
     await updateStreak(supabase, userId, 'reflections');
-    const s = await loadStreaks(supabase, userId);
+    const [s, r] = await Promise.all([
+      loadStreaks(supabase, userId),
+      loadReflections(supabase, userId, { limit: 500 }),
+    ]);
     setStreaks(s);
+    setReflections(r);
   };
 
   const handleSessionPlan = async (form: SessionPlanFormData) => {
@@ -268,7 +279,17 @@ export default function HomeClient({ userId, userEmail }: Props) {
         )}
 
         {activeTab === 'history' && (
-          <TradeLog trades={trades} onTradeClick={handleTradeClick} />
+          <TradeLog trades={trades} reflections={reflections} onTradeClick={handleTradeClick} />
+        )}
+
+        {activeTab === 'trade-calendar' && (
+          <TradeCalendar
+            trades={trades}
+            reflections={reflections}
+            supabase={supabase}
+            userId={userId}
+            onTradeClick={handleTradeClick}
+          />
         )}
 
         {activeTab === 'reflect' && (

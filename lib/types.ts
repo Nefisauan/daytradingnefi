@@ -238,4 +238,4 @@ export interface EconomicEvent {
   actual?: string;
 }
 
-export type TabId = 'log' | 'history' | 'reflect' | 'dashboard' | 'plan' | 'calendar' | 'playbook';
+export type TabId = 'log' | 'history' | 'reflect' | 'dashboard' | 'plan' | 'trade-calendar' | 'calendar' | 'playbook';
