@@ -25,6 +25,7 @@ export default function EconomicCalendar() {
   const [loadingExplanation, setLoadingExplanation] = useState<Record<string, boolean>>({});
   const [marketBrief, setMarketBrief] = useState('');
   const [loadingBrief, setLoadingBrief] = useState(false);
+  const [source, setSource] = useState<'ai' | 'static' | ''>('');
 
   // Fetch events from AI-powered API
   useEffect(() => {
@@ -40,8 +41,9 @@ export default function EconomicCalendar() {
           id: `event-${i}`,
         }));
         setEvents(evts);
+        setSource(data.source || 'ai');
       } catch {
-        setError('Could not load economic calendar. ANTHROPIC_API_KEY may not be configured.');
+        setError('Could not load economic calendar.');
         setEvents([]);
       } finally {
         setLoading(false);
@@ -102,14 +104,22 @@ export default function EconomicCalendar() {
           <h3 className="text-lg font-semibold">Economic Calendar</h3>
           <p className="text-sm text-muted">{format(new Date(), 'EEEE, MMMM d, yyyy')} (ET)</p>
         </div>
-        <button
-          onClick={getMarketBrief}
-          disabled={loadingBrief || events.length === 0}
-          className="text-xs px-3 py-1.5 rounded-lg border border-accent/30 text-accent hover:bg-accent/10 transition-colors disabled:opacity-50"
-        >
-          {loadingBrief ? 'Analyzing...' : 'AI Market Brief'}
-        </button>
+        {source === 'ai' && (
+          <button
+            onClick={getMarketBrief}
+            disabled={loadingBrief || events.length === 0}
+            className="text-xs px-3 py-1.5 rounded-lg border border-accent/30 text-accent hover:bg-accent/10 transition-colors disabled:opacity-50"
+          >
+            {loadingBrief ? 'Analyzing...' : 'AI Market Brief'}
+          </button>
+        )}
       </div>
+
+      {source === 'static' && !loading && (
+        <div className="text-xs text-muted bg-card border border-border rounded-lg px-3 py-2">
+          Showing estimated recurring events. Add Anthropic API credits for real-time AI-powered calendar with exact times and forecasts.
+        </div>
+      )}
 
       {/* Market brief */}
       {marketBrief && (
@@ -185,22 +195,24 @@ export default function EconomicCalendar() {
                         </div>
                       )}
 
-                      {/* Explain Impact button */}
-                      <div className="mt-2">
-                        {explanations[event.id] ? (
-                          <div className="text-xs text-foreground/70 bg-background rounded-lg px-3 py-2 leading-relaxed">
-                            {explanations[event.id]}
-                          </div>
-                        ) : (
-                          <button
-                            onClick={() => explainEvent(event)}
-                            disabled={loadingExplanation[event.id]}
-                            className="text-[11px] text-accent hover:underline disabled:opacity-50"
-                          >
-                            {loadingExplanation[event.id] ? 'Analyzing...' : 'Explain Gold Impact'}
-                          </button>
-                        )}
-                      </div>
+                      {/* Explain Impact button — only with AI source */}
+                      {source === 'ai' && (
+                        <div className="mt-2">
+                          {explanations[event.id] ? (
+                            <div className="text-xs text-foreground/70 bg-background rounded-lg px-3 py-2 leading-relaxed">
+                              {explanations[event.id]}
+                            </div>
+                          ) : (
+                            <button
+                              onClick={() => explainEvent(event)}
+                              disabled={loadingExplanation[event.id]}
+                              className="text-[11px] text-accent hover:underline disabled:opacity-50"
+                            >
+                              {loadingExplanation[event.id] ? 'Analyzing...' : 'Explain Gold Impact'}
+                            </button>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
