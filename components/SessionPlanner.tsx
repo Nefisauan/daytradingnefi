@@ -23,6 +23,8 @@ export default function SessionPlanner({ onSubmit, initialData }: Props) {
     max_trades: initialData?.max_trades || '3',
     notes: initialData?.notes || '',
   });
+  const [lookingFor, setLookingFor] = useState('');
+  const [willNotTrade, setWillNotTrade] = useState('');
   const [loading, setLoading] = useState(false);
   const [saved, setSaved] = useState(false);
 
@@ -33,7 +35,14 @@ export default function SessionPlanner({ onSubmit, initialData }: Props) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    await onSubmit(form);
+
+    // Append intent prompts to notes
+    const extraParts: string[] = [];
+    if (lookingFor) extraParts.push(`[Looking For] ${lookingFor}`);
+    if (willNotTrade) extraParts.push(`[Will NOT Trade If] ${willNotTrade}`);
+    const combinedNotes = [form.notes, ...extraParts].filter(Boolean).join('\n');
+
+    await onSubmit({ ...form, notes: combinedNotes });
     setLoading(false);
     setSaved(true);
     setTimeout(() => setSaved(false), 3000);
@@ -43,6 +52,34 @@ export default function SessionPlanner({ onSubmit, initialData }: Props) {
     <form onSubmit={handleSubmit} className="space-y-5">
       <h3 className="text-lg font-semibold">Pre-Market Session Plan</h3>
       <p className="text-sm text-muted">Plan your session before the market opens.</p>
+
+      {/* Session Intent */}
+      <div className="bg-card border border-accent/20 rounded-xl p-4 space-y-3">
+        <div>
+          <label className="block text-sm font-medium mb-1.5">
+            &quot;Today I&apos;m looking for...&quot;
+          </label>
+          <textarea
+            value={lookingFor}
+            onChange={(e) => setLookingFor(e.target.value)}
+            className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-accent resize-none"
+            rows={2}
+            placeholder="e.g. A sweep of BSL into a bearish OB on the 15m with a CHoCH entry on the 1m"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium mb-1.5">
+            &quot;I will NOT trade if...&quot;
+          </label>
+          <textarea
+            value={willNotTrade}
+            onChange={(e) => setWillNotTrade(e.target.value)}
+            className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-accent resize-none"
+            rows={2}
+            placeholder="e.g. CPI drops at 8:30, or if I feel frustrated from yesterday's losses"
+          />
+        </div>
+      </div>
 
       {/* Market Bias */}
       <div>

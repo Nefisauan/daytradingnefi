@@ -48,6 +48,7 @@ import PlaybookView from './PlaybookView';
 import AIInsights from './AIInsights';
 import ScreenshotUpload from './ScreenshotUpload';
 import TradeCalendar from './TradeCalendar';
+import TradingChat from './TradingChat';
 
 const TABS: { id: TabId; label: string }[] = [
   { id: 'log', label: 'Log Trade' },
@@ -58,6 +59,7 @@ const TABS: { id: TabId; label: string }[] = [
   { id: 'trade-calendar', label: 'Trade Cal' },
   { id: 'calendar', label: 'Calendar' },
   { id: 'playbook', label: 'Playbook' },
+  { id: 'chat', label: 'Coach' },
 ];
 
 interface Props {
@@ -326,6 +328,10 @@ export default function HomeClient({ userId, userEmail }: Props) {
 
         {activeTab === 'playbook' && (
           <PlaybookView entries={playbook} onAdd={handleAddPlaybook} />
+        )}
+
+        {activeTab === 'chat' && (
+          <TradingChat />
         )}
       </main>
     </div>
