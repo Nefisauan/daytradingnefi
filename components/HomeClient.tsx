@@ -56,6 +56,7 @@ import TradeCalendar from './TradeCalendar';
 import TradingChat from './TradingChat';
 import PotentialTradeForm from './PotentialTradeForm';
 import PotentialTradeLog from './PotentialTradeLog';
+import TradeCalculator from './TradeCalculator';
 
 const TABS: { id: TabId; label: string }[] = [
   { id: 'log', label: 'Log Trade' },
@@ -67,6 +68,7 @@ const TABS: { id: TabId; label: string }[] = [
   { id: 'calendar', label: 'Calendar' },
   { id: 'playbook', label: 'Playbook' },
   { id: 'potential', label: 'Potential' },
+  { id: 'calculator', label: 'Calc' },
   { id: 'chat', label: 'Coach' },
 ];
 
@@ -381,6 +383,10 @@ export default function HomeClient({ userId, userEmail }: Props) {
               onDelete={handleDeletePotentialTrade}
             />
           </div>
+        )}
+
+        {activeTab === 'calculator' && (
+          <TradeCalculator />
         )}
 
         {activeTab === 'chat' && (

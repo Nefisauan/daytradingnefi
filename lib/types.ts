@@ -240,7 +240,7 @@ export interface EconomicEvent {
   actual?: string;
 }
 
-export type TabId = 'log' | 'history' | 'reflect' | 'dashboard' | 'plan' | 'trade-calendar' | 'calendar' | 'playbook' | 'chat' | 'potential';
+export type TabId = 'log' | 'history' | 'reflect' | 'dashboard' | 'plan' | 'trade-calendar' | 'calendar' | 'playbook' | 'chat' | 'potential' | 'calculator';
 
 export type MissedReason = 'Hesitation' | 'Doubt' | 'Distraction' | 'Missed signal';
 
