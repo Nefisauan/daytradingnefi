@@ -12,9 +12,10 @@ interface ScreenshotUploadProps {
   tradeId: string;
   userId: string;
   supabase: any;
+  tableName?: string;
 }
 
-export default function ScreenshotUpload({ tradeId, userId, supabase }: ScreenshotUploadProps) {
+export default function ScreenshotUpload({ tradeId, userId, supabase, tableName = 'trade_screenshots' }: ScreenshotUploadProps) {
   const [screenshots, setScreenshots] = useState<Screenshot[]>([]);
   const [uploading, setUploading] = useState(false);
   const [dragOver, setDragOver] = useState(false);
@@ -26,7 +27,7 @@ export default function ScreenshotUpload({ tradeId, userId, supabase }: Screensh
 
   const loadScreenshots = useCallback(async () => {
     const { data: rows, error: fetchErr } = await supabase
-      .from('trade_screenshots')
+      .from(tableName)
       .select('id, storage_path')
       .eq('trade_id', tradeId)
       .eq('user_id', userId)
@@ -105,7 +106,7 @@ export default function ScreenshotUpload({ tradeId, userId, supabase }: Screensh
 
       // 2. insert metadata row
       const { error: insertErr } = await supabase
-        .from('trade_screenshots')
+        .from(tableName)
         .insert({
           storage_path: storagePath,
           trade_id: tradeId,
@@ -164,7 +165,7 @@ export default function ScreenshotUpload({ tradeId, userId, supabase }: Screensh
     }
 
     const { error: rowErr } = await supabase
-      .from('trade_screenshots')
+      .from(tableName)
       .delete()
       .eq('id', screenshot.id);
 

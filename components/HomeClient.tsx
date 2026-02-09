@@ -370,6 +370,7 @@ export default function HomeClient({ userId, userEmail }: Props) {
                   tradeId={lastPotentialTradeId}
                   userId={userId}
                   supabase={supabase}
+                  tableName="potential_trade_screenshots"
                 />
               </div>
             )}

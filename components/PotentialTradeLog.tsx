@@ -196,6 +196,7 @@ export default function PotentialTradeLog({ trades, userId, supabase, onDelete }
                         tradeId={trade.id}
                         userId={userId}
                         supabase={supabase}
+                        tableName="potential_trade_screenshots"
                       />
                     </div>
 
