@@ -89,6 +89,7 @@ export default function HomeClient({ userId, userEmail }: Props) {
   const [lastTradeId, setLastTradeId] = useState<string | null>(null);
   const [reflections, setReflections] = useState<Reflection[]>([]);
   const [potentialTrades, setPotentialTrades] = useState<PotentialTrade[]>([]);
+  const [lastPotentialTradeId, setLastPotentialTradeId] = useState<string | null>(null);
   const [editingTrade, setEditingTrade] = useState<Trade | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -210,6 +211,7 @@ export default function HomeClient({ userId, userEmail }: Props) {
     const trade = await createPotentialTrade(supabase, userId, form);
     if (trade) {
       setPotentialTrades((prev) => [trade, ...prev]);
+      setLastPotentialTradeId(trade.id);
       return trade.id;
     }
     return null;
@@ -361,6 +363,16 @@ export default function HomeClient({ userId, userEmail }: Props) {
               onSubmit={handleLogPotentialTrade}
               defaultMarket={profile?.default_market || 'GC'}
             />
+            {lastPotentialTradeId && (
+              <div className="space-y-3">
+                <h3 className="text-sm font-medium text-muted">Attach Screenshots</h3>
+                <ScreenshotUpload
+                  tradeId={lastPotentialTradeId}
+                  userId={userId}
+                  supabase={supabase}
+                />
+              </div>
+            )}
             <PotentialTradeLog
               trades={potentialTrades}
               userId={userId}
