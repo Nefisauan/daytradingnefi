@@ -26,6 +26,8 @@ export type SetupType = (typeof SETUP_TYPES)[number];
 export const MARKETS: { value: MarketType; label: string }[] = [
   { value: 'GC', label: 'Gold (GC)' },
   { value: 'MGC', label: 'Micro Gold (MGC)' },
+  { value: 'ES', label: 'S&P 500 (ES)' },
+  { value: 'MES', label: 'Micro S&P 500 (MES)' },
 ];
 
 // ── Database models ──────────────────────────────────────────────────
@@ -238,4 +240,39 @@ export interface EconomicEvent {
   actual?: string;
 }
 
-export type TabId = 'log' | 'history' | 'reflect' | 'dashboard' | 'plan' | 'trade-calendar' | 'calendar' | 'playbook' | 'chat';
+export type TabId = 'log' | 'history' | 'reflect' | 'dashboard' | 'plan' | 'trade-calendar' | 'calendar' | 'playbook' | 'chat' | 'potential';
+
+export type MissedReason = 'Hesitation' | 'Doubt' | 'Distraction' | 'Missed signal';
+
+export interface PotentialTrade {
+  id: string;
+  user_id: string;
+  market: MarketType;
+  direction: Direction;
+  setup_type: string;
+  entry_price: number | null;
+  exit_price: number | null;
+  stop_loss: number | null;
+  take_profit: number | null;
+  potential_pnl: number | null;
+  r_multiple: number | null;
+  entry_time: string | null;
+  reason: MissedReason | null;
+  notes: string | null;
+  created_at: string;
+}
+
+export interface PotentialTradeFormData {
+  market: MarketType;
+  direction: Direction;
+  setup_type: string;
+  entry_price: string;
+  exit_price: string;
+  stop_loss: string;
+  take_profit: string;
+  potential_pnl: string;
+  r_multiple: string;
+  entry_time: string;
+  reason: MissedReason | '';
+  notes: string;
+}

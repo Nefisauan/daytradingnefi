@@ -13,6 +13,8 @@ import {
   Streak,
   KeyLevel,
   LiquidityZone,
+  PotentialTrade,
+  PotentialTradeFormData,
 } from '../types';
 
 // ── Profile ──────────────────────────────────────────────────────────
@@ -395,4 +397,54 @@ export async function updateStreak(
     .select()
     .single();
   return data;
+}
+
+// ── Potential Trades ────────────────────────────────────────────────
+
+export async function createPotentialTrade(
+  supabase: SupabaseClient,
+  userId: string,
+  form: PotentialTradeFormData
+): Promise<PotentialTrade | null> {
+  const { data } = await supabase
+    .from('potential_trades')
+    .insert({
+      user_id: userId,
+      market: form.market,
+      direction: form.direction,
+      setup_type: form.setup_type,
+      entry_price: parseFloat(form.entry_price) || null,
+      exit_price: parseFloat(form.exit_price) || null,
+      stop_loss: parseFloat(form.stop_loss) || null,
+      take_profit: parseFloat(form.take_profit) || null,
+      potential_pnl: parseFloat(form.potential_pnl) || null,
+      r_multiple: parseFloat(form.r_multiple) || null,
+      entry_time: form.entry_time || null,
+      reason: form.reason || null,
+      notes: form.notes || null,
+    })
+    .select()
+    .single();
+  return data;
+}
+
+export async function loadPotentialTrades(
+  supabase: SupabaseClient,
+  userId: string,
+  options?: { limit?: number }
+): Promise<PotentialTrade[]> {
+  const { data } = await supabase
+    .from('potential_trades')
+    .select('*')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false })
+    .limit(options?.limit || 100);
+  return data || [];
+}
+
+export async function deletePotentialTrade(
+  supabase: SupabaseClient,
+  tradeId: string
+): Promise<void> {
+  await supabase.from('potential_trades').delete().eq('id', tradeId);
 }

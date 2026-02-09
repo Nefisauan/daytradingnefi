@@ -6,6 +6,8 @@ import {
   Trade,
   Profile,
   Reflection,
+  PotentialTrade,
+  PotentialTradeFormData,
   TabId,
   TradeFormData,
   RuleCheckFormData,
@@ -32,6 +34,9 @@ import {
   loadStreaks,
   updateStreak,
   loadReflections,
+  createPotentialTrade,
+  loadPotentialTrades,
+  deletePotentialTrade,
 } from '@/lib/supabase/database';
 import AuthButton from './AuthButton';
 import StreakTracker from './StreakTracker';
@@ -49,6 +54,8 @@ import AIInsights from './AIInsights';
 import ScreenshotUpload from './ScreenshotUpload';
 import TradeCalendar from './TradeCalendar';
 import TradingChat from './TradingChat';
+import PotentialTradeForm from './PotentialTradeForm';
+import PotentialTradeLog from './PotentialTradeLog';
 
 const TABS: { id: TabId; label: string }[] = [
   { id: 'log', label: 'Log Trade' },
@@ -59,6 +66,7 @@ const TABS: { id: TabId; label: string }[] = [
   { id: 'trade-calendar', label: 'Trade Cal' },
   { id: 'calendar', label: 'Calendar' },
   { id: 'playbook', label: 'Playbook' },
+  { id: 'potential', label: 'Potential' },
   { id: 'chat', label: 'Coach' },
 ];
 
@@ -80,19 +88,21 @@ export default function HomeClient({ userId, userEmail }: Props) {
   const [ruleCheckTradeId, setRuleCheckTradeId] = useState<string | null>(null);
   const [lastTradeId, setLastTradeId] = useState<string | null>(null);
   const [reflections, setReflections] = useState<Reflection[]>([]);
+  const [potentialTrades, setPotentialTrades] = useState<PotentialTrade[]>([]);
   const [editingTrade, setEditingTrade] = useState<Trade | null>(null);
   const [loading, setLoading] = useState(true);
 
   // ── Load data on mount ─────────────────────────────────────────────
   const loadAllData = useCallback(async () => {
     setLoading(true);
-    const [profileData, tradesData, playbookData, streaksData, planData, reflectionsData] = await Promise.all([
+    const [profileData, tradesData, playbookData, streaksData, planData, reflectionsData, potentialData] = await Promise.all([
       loadProfile(supabase, userId),
       loadTrades(supabase, userId, { limit: 200 }),
       loadPlaybook(supabase, userId),
       loadStreaks(supabase, userId),
       loadSessionPlan(supabase, userId),
       loadReflections(supabase, userId, { limit: 500 }),
+      loadPotentialTrades(supabase, userId),
     ]);
     setProfile(profileData);
     setTrades(tradesData);
@@ -100,6 +110,7 @@ export default function HomeClient({ userId, userEmail }: Props) {
     setStreaks(streaksData);
     setSessionPlan(planData);
     setReflections(reflectionsData);
+    setPotentialTrades(potentialData);
     setLoading(false);
   }, [supabase, userId]);
 
@@ -193,6 +204,20 @@ export default function HomeClient({ userId, userEmail }: Props) {
     if (saved) {
       setPlaybookEntries((prev) => [saved, ...prev]);
     }
+  };
+
+  const handleLogPotentialTrade = async (form: PotentialTradeFormData): Promise<string | null> => {
+    const trade = await createPotentialTrade(supabase, userId, form);
+    if (trade) {
+      setPotentialTrades((prev) => [trade, ...prev]);
+      return trade.id;
+    }
+    return null;
+  };
+
+  const handleDeletePotentialTrade = async (id: string) => {
+    await deletePotentialTrade(supabase, id);
+    setPotentialTrades((prev) => prev.filter((t) => t.id !== id));
   };
 
   // ── Render ─────────────────────────────────────────────────────────
@@ -328,6 +353,21 @@ export default function HomeClient({ userId, userEmail }: Props) {
 
         {activeTab === 'playbook' && (
           <PlaybookView entries={playbook} onAdd={handleAddPlaybook} />
+        )}
+
+        {activeTab === 'potential' && (
+          <div className="space-y-6">
+            <PotentialTradeForm
+              onSubmit={handleLogPotentialTrade}
+              defaultMarket={profile?.default_market || 'GC'}
+            />
+            <PotentialTradeLog
+              trades={potentialTrades}
+              userId={userId}
+              supabase={supabase}
+              onDelete={handleDeletePotentialTrade}
+            />
+          </div>
         )}
 
         {activeTab === 'chat' && (
