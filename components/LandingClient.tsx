@@ -39,7 +39,7 @@ export default function LandingClient() {
             analyze your edge, and let AI coach you to consistency.
           </p>
           <Link
-            href="/login"
+            href="/login?signup=true"
             className="inline-flex px-8 py-3 rounded-xl bg-gradient-to-r from-accent to-accent-dim text-background font-semibold text-lg hover:opacity-90 transition-opacity"
           >
             Start Journaling
