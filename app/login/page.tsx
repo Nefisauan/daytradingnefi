@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import LoginClient from '@/components/LoginClient';
@@ -8,5 +9,9 @@ export default async function LoginPage() {
 
   if (user) redirect('/');
 
-  return <LoginClient />;
+  return (
+    <Suspense>
+      <LoginClient />
+    </Suspense>
+  );
 }
